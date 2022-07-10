@@ -1,12 +1,12 @@
-export interface Stats{
-    hp: number;
-    ac: number;
-    uc: number;
-    shoot: number;
-    melee: number;
+export interface Stats {
+    hp: number | undefined;
+    ac: number | undefined;
+    uc: number | undefined;
+    shoot: number | undefined;
+    melee: number | undefined;
 }
 
-export interface RoundStats{
+export interface RoundStats {
     c: number;
     melee: number;
     shoot: number;
