@@ -1,5 +1,6 @@
 <template>
   <div>
+    <h3>{{ gameId }}</h3>
     <b-button v-on:click="addGunpla" class="primary">Add Gunpla</b-button>
     <b-button v-on:click="formSubmit" class="primary">Confirm</b-button>
     <div class="accordion" role="tablist" v-for="(stats, idx) in gunplas" :key="'gunpla-' + (idx + 1)">
@@ -20,13 +21,26 @@
 
 <script lang="ts">
 import BuildGunpla from '../components/BuildGunpla.vue'
+import axios, { AxiosResponse } from 'axios'
 import { defineComponent } from 'vue'
 import { Stats } from '../data/stats'
+import router from '@/router'
+import { Game } from '@/data/game'
+
+function onSuccess(value: AxiosResponse) {
+  sessionStorage.setItem("gunplas", JSON.stringify(value.data))
+  router.push({ name: "lobbyPhase" })
+}
+
+function onFail(value: AxiosResponse) {
+  alert(value)
+}
 
 export default defineComponent({
   data() {
     return {
-      gunplas: new Array<Stats>()
+      gunplas: new Array<Stats>(),
+      gameId: ""
     }
   },
   components: {
@@ -37,8 +51,15 @@ export default defineComponent({
       this.gunplas.push({} as Stats)
     },
     formSubmit: function () {
-      const websock = new WebSocket("ws://localhost")
-      websock.send(JSON.stringify(this.gunplas))
+      axios.post("http://localhost:5000/api/build_phase", this.gunplas).then(onSuccess, onFail)
+    },
+  },
+  async mounted() {
+    const data: Game = (await axios.get("http://localhost:5000/api/game_detail", { withCredentials: true })).data
+    if (data.gameId) {
+      this.gameId = data.gameId
+    } else {
+      router.push({ name: "home" })
     }
   }
 })

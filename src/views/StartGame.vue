@@ -9,7 +9,28 @@
 <script lang="ts">
 import router from "@/router"
 import { defineComponent } from "vue"
-import { Host } from '../data/host'
+import { Game } from '../data/game'
+import * as config from '../config'
+import axios, { AxiosResponse } from 'axios'
+
+function onSuccess(value: AxiosResponse) {
+  router.push({ name: "buildPhase" })
+}
+
+function onFail(value: AxiosResponse) {
+  alert(value)
+}
+
+function onGameDetailSuccess(value: AxiosResponse) {
+  const data: Game = value.data
+  if (data.gameId) {
+    router.push({ name: "buildPhase" })
+  }
+}
+
+function onGameDetailFail(value: AxiosResponse) {
+  alert(value)
+}
 
 export default defineComponent({
   data() {
@@ -19,16 +40,14 @@ export default defineComponent({
   },
   methods: {
     startGame: () => {
-      console.log('Start')
-      // TODO: No need for startType, the API calls will generate user codes for you
-      router.push({ name: "buildPhase", params: { startType: Host.HOST } })
+      axios.get("http://" + config.WEBSOCKET_HOST + ":" + config.WEBSOCKET_POST + "/" + config.REST_STARTGAME_ENDPOINT, { withCredentials: true }).then(onSuccess, onFail)
     },
     joinGame: function () {
-      if (this.gameId) {
-        console.log('Join')
-        router.push({ name: "buildPhase", params: { startType: Host.PARTICIPANT } })
-      }
-    },
+      axios.get("http://" + config.WEBSOCKET_HOST + ":" + config.WEBSOCKET_POST + "/" + config.REST_JOINGAME_ENDPOINT, {withCredentials: true, params:{gameId: this.gameId}}).then(onSuccess, onFail)
+    }
+  },
+  created() {
+    axios.get("http://localhost:5000/api/game_detail", { withCredentials: true }).then(onGameDetailSuccess, onGameDetailFail)
   }
 })
 </script>
